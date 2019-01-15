@@ -189,7 +189,7 @@ suite = {
             "sourceDirs": ["src"],
             "dependencies": [
                 "com.oracle.objectfile",
-                "com.oracle.svm.core.graal.amd64",
+                "com.oracle.svm.core.graal",
                 "com.oracle.graal.pointsto",
             ],
             "javaCompliance": "8+",
@@ -572,6 +572,7 @@ suite = {
                 "com.oracle.svm.graal",  # necessary until Truffle is fully supported on Windows (GR-7941)
                 "com.oracle.svm.truffle",  # necessary until Truffle is fully supported on Windows (GR-7941)
                 "com.oracle.svm.hosted",
+                "com.oracle.svm.core.graal.amd64",
                 "com.oracle.svm.truffle.nfi",
                 "com.oracle.svm.core",
                 "com.oracle.svm.core.jdk8",

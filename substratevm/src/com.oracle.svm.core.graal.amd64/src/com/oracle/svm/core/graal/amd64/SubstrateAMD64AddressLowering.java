@@ -60,11 +60,6 @@ class SubstrateAMD64AddressLoweringPhaseFeature implements Feature {
     }
 }
 
-import com.oracle.svm.core.SubstrateOptions;
-import com.oracle.svm.core.graal.meta.SubstrateRegisterConfig;
-
-import jdk.vm.ci.code.Register;
-
 public class SubstrateAMD64AddressLowering extends AMD64CompressAddressLowering {
     private final long heapBase;
     private final Register heapBaseRegister;

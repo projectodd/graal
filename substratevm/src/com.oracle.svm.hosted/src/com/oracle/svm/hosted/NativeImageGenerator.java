@@ -145,6 +145,7 @@ import com.oracle.svm.core.FrameAccess;
 import com.oracle.svm.core.JavaMainWrapper.JavaMainSupport;
 import com.oracle.svm.core.OS;
 import com.oracle.svm.core.SubstrateOptions;
+import com.oracle.svm.core.SubstrateTargetDescription;
 import com.oracle.svm.core.allocationprofile.AllocationCounter;
 import com.oracle.svm.core.allocationprofile.AllocationSite;
 import com.oracle.svm.core.c.function.CEntryPointOptions;
@@ -162,7 +163,6 @@ import com.oracle.svm.core.graal.meta.SubstrateRegisterConfig;
 import com.oracle.svm.core.graal.meta.SubstrateReplacements;
 import com.oracle.svm.core.graal.meta.SubstrateSnippetReflectionProvider;
 import com.oracle.svm.core.graal.meta.SubstrateStampProvider;
-import com.oracle.svm.core.graal.meta.SubstrateTargetDescription;
 import com.oracle.svm.core.graal.phases.CollectDeoptimizationSourcePositionsPhase;
 import com.oracle.svm.core.graal.phases.DeadStoreRemovalPhase;
 import com.oracle.svm.core.graal.phases.MethodSafepointInsertionPhase;
@@ -359,7 +359,7 @@ public class NativeImageGenerator {
         return false;
     }
 
-    public static TargetDescription createTarget(Platform platform) {
+    public static SubstrateTargetDescription createTarget(Platform platform) {
         if (includedIn(platform, Platform.AMD64.class)) {
             Architecture architecture;
             if (NativeImageOptions.NativeArchitecture.getValue()) {
@@ -376,7 +376,8 @@ public class NativeImageGenerator {
             }
             assert architecture instanceof AMD64 : "SVM supports only AMD64 architectures.";
             boolean inlineObjects = SubstrateOptions.SpawnIsolates.getValue();
-            return new SubstrateTargetDescription(architecture, true, 16, 0, inlineObjects);
+            int deoptScratchSpace = 2 * 8; // Space for two 64-bit registers: rax and xmm0
+            return new SubstrateTargetDescription(architecture, true, 16, 0, inlineObjects, deoptScratchSpace);
         } else {
             throw UserError.abort("Architecture specified by platform is not supported: " + platform.getClass().getTypeName());
         }
@@ -496,9 +497,9 @@ public class NativeImageGenerator {
                     // TODO Make customizable via command line parameter.
                     Platform platform = defaultPlatform(loader.getClassLoader());
 
-                    TargetDescription target = createTarget(platform);
+                    SubstrateTargetDescription target = createTarget(platform);
                     ImageSingletons.add(Platform.class, platform);
-                    ImageSingletons.add(TargetDescription.class, target);
+                    ImageSingletons.add(SubstrateTargetDescription.class, target);
                     if (javaMainSupport != null) {
                         ImageSingletons.add(JavaMainSupport.class, javaMainSupport);
                     }
