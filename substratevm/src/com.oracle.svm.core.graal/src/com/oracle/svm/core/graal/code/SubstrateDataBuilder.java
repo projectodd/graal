@@ -46,12 +46,6 @@ import jdk.vm.ci.meta.SerializableConstant;
 import jdk.vm.ci.meta.VMConstant;
 
 public class SubstrateDataBuilder extends DataBuilder {
-
-    @Override
-    public boolean needDetailedPatchingInformation() {
-        return true;
-    }
-
     @Override
     public Data createDataItem(Constant constant) {
         int size;

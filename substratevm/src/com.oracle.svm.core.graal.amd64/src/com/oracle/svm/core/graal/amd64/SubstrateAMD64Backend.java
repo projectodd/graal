@@ -37,7 +37,6 @@ import static org.graalvm.compiler.lir.LIRValueUtil.asConstantValue;
 
 import java.util.Collection;
 
-import org.graalvm.compiler.asm.Assembler;
 import org.graalvm.compiler.asm.amd64.AMD64Address;
 import org.graalvm.compiler.asm.amd64.AMD64Address.Scale;
 import org.graalvm.compiler.asm.amd64.AMD64Assembler;
@@ -824,7 +823,8 @@ public class SubstrateAMD64Backend extends SubstrateBackend implements LIRGenera
 
     @Override
     public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenResult, FrameMap frameMap, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
-        Assembler masm = new AMD64MacroAssembler(getTarget());
+        AMD64MacroAssembler masm = new AMD64MacroAssembler(getTarget());
+        masm.setCodePatchingAnnotationConsumer(new SubstrateAMD64CodePatchingConsumer(compilationResult));
         SharedMethod method = ((SubstrateLIRGenerationResult) lirGenResult).getMethod();
         Deoptimizer.StubType stubType = method.getDeoptStubType();
         DataBuilder dataBuilder = new SubstrateDataBuilder();

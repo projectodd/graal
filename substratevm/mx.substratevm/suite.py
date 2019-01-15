@@ -124,6 +124,7 @@ suite = {
             "sourceDirs": ["src"],
             "dependencies": [
                 "com.oracle.svm.core.graal",
+                "com.oracle.svm.hosted.amd64",
             ],
             "checkstyle": "com.oracle.svm.core",
             "javaCompliance": "8+",
@@ -183,7 +184,15 @@ suite = {
             ],
             "workingSets": "SVM",
         },
-
+        "com.oracle.svm.hosted.amd64": {
+            "subDir": "src",
+            "sourceDirs": ["src"],
+            "dependencies": [
+                "com.oracle.svm.hosted",
+            ],
+            "javaCompliance": "8+",
+            "workingSets": "SVM",
+        },
         "com.oracle.svm.hosted": {
             "subDir": "src",
             "sourceDirs": ["src"],

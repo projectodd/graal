@@ -26,6 +26,7 @@ package com.oracle.svm.hosted.image;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,10 +34,13 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.graalvm.compiler.asm.amd64.AMD64BaseAssembler.OperandDataAnnotation;
 import org.graalvm.compiler.code.CompilationResult;
+import org.graalvm.compiler.code.CompilationResult.CodeAnnotation;
 import org.graalvm.compiler.core.common.NumUtil;
 import org.graalvm.compiler.debug.DebugContext;
 import org.graalvm.compiler.debug.Indent;
+import org.graalvm.compiler.lir.asm.CompilationResultBuilder;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.word.WordFactory;
 
@@ -53,6 +57,7 @@ import com.oracle.svm.core.graal.code.InstructionPatcher;
 import com.oracle.svm.core.util.Counter;
 import com.oracle.svm.core.util.VMError;
 import com.oracle.svm.hosted.NativeImageOptions;
+import com.oracle.svm.hosted.PatchingAnnotation;
 import com.oracle.svm.hosted.code.CompilationInfoSupport;
 import com.oracle.svm.hosted.image.NativeBootImage.NativeTextSectionImpl;
 import com.oracle.svm.hosted.meta.HostedMethod;
@@ -253,6 +258,13 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
             // the codecache-relative offset of the compilation
             int compStart = method.getCodeAddressOffset();
 
+            Map<Integer, PatchingAnnotation> patches = new HashMap<>();
+            for (CodeAnnotation codeAnnotation : compilation.getAnnotations()) {
+                if (codeAnnotation instanceof PatchingAnnotation) {
+                    patches.put(codeAnnotation.position, (PatchingAnnotation) codeAnnotation);
+                }
+            }
+            // TODO: We have to move the functionality below into classes of PatchingAnnotation
             InstructionPatcher patcher = new InstructionPatcher(compilation);
             // ... patch direct call sites.
             for (Infopoint infopoint : compilation.getInfopoints()) {
