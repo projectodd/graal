@@ -43,7 +43,7 @@ public class SubstrateAMD64CodePatchingConsumer implements Consumer<CodeAnnotati
     @Override
     public void accept(CodeAnnotation annotation) {
         if (annotation instanceof AMD64BaseAssembler.OperandDataAnnotation) {
-            compilationResult.addAnnotation(new AMD64PatchingAnnotation(annotation.instructionPosition));
+            compilationResult.addAnnotation(new AMD64PatchingAnnotation(annotation.instructionPosition, (AMD64BaseAssembler.OperandDataAnnotation) annotation));
         }
     }
 }

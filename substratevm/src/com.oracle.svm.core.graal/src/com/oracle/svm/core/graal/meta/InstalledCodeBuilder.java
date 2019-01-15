@@ -33,7 +33,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.oracle.svm.core.graal.code.InstructionPatcher;
 import org.graalvm.compiler.code.CompilationResult;
+import org.graalvm.compiler.code.PatchingAnnotation;
 import org.graalvm.compiler.core.common.NumUtil;
 import org.graalvm.compiler.debug.DebugContext;
 import org.graalvm.compiler.debug.Indent;
@@ -55,8 +57,8 @@ import com.oracle.svm.core.code.InstalledCodeObserverSupport;
 import com.oracle.svm.core.code.RuntimeMethodInfo;
 import com.oracle.svm.core.config.ConfigurationValues;
 import com.oracle.svm.core.deopt.SubstrateInstalledCode;
-import com.oracle.svm.core.graal.code.InstructionPatcher;
-import com.oracle.svm.core.graal.code.InstructionPatcher.PatchData;
+//import com.oracle.svm.core.graal.code.OldInstructionPatcher;
+//import com.oracle.svm.core.graal.code.OldInstructionPatcher.PatchData;
 import com.oracle.svm.core.graal.code.SubstrateCompilationResult;
 import com.oracle.svm.core.heap.Heap;
 import com.oracle.svm.core.heap.NoAllocationVerifier;
@@ -302,6 +304,7 @@ public class InstalledCodeBuilder {
             objectConstants.add(constantsOffset + position, (SubstrateObjectConstant) constant);
         });
 
+
         // Open the PinnedAllocator for the meta-information.
         metaInfoAllocator.open();
         try {
@@ -387,13 +390,15 @@ public class InstalledCodeBuilder {
             if (dataPatch.reference instanceof DataSectionReference) {
                 DataSectionReference ref = (DataSectionReference) dataPatch.reference;
                 int pcDisplacement = constantsOffset + ref.getOffset() - dataPatch.pcOffset;
-                patcher.findPatchData(dataPatch.pcOffset, pcDisplacement).apply(compiledBytes);
+                //patcher.getPatching(dataPatch.pcOffset)., pcDisplacement).apply(compiledBytes);
+                patcher.getPatching(dataPatch.pcOffset).patch(dataPatch.pcOffset, pcDisplacement, compiledBytes);
 
             } else if (dataPatch.reference instanceof ConstantReference) {
                 ConstantReference ref = (ConstantReference) dataPatch.reference;
                 SubstrateObjectConstant refConst = (SubstrateObjectConstant) ref.getConstant();
 
-                PatchData data = patcher.findPatchData(dataPatch.pcOffset, 0);
+                PatchingAnnotation anno = patcher.getPatching(dataPatch.pcOffset);
+                // TODO FIX ME
                 objectConstants.add(data.operandPosition, refConst);
 
                 if (data.operandSize == Long.BYTES && data.operandSize > ConfigurationValues.getObjectLayout().getReferenceSize()) {
@@ -441,7 +446,7 @@ public class InstalledCodeBuilder {
                 assert pcDisplacement == (int) pcDisplacement;
 
                 // Patch a PC-relative call.
-                patcher.findPatchData(call.pcOffset, (int) pcDisplacement).apply(compiledBytes);
+                patcher.getPatching(call.pcOffset).patch(call.pcOffset, (int) pcDisplacement, compiledBytes);
             }
         }
         if (directTargets.size() > 0) {

@@ -25,6 +25,7 @@
 
 #include "cpufeatures.h"
 
+#ifdef __x86_64__
 #ifndef _WIN64
 #include <cpuid.h>
 
@@ -71,6 +72,7 @@ int get_cpuid (unsigned int leaf, unsigned int *eax, unsigned int *ebx, unsigned
 }
 
 #endif
+
 
 
 #define bit_CX8_compat           0x00000100
@@ -169,4 +171,12 @@ void determineCPUFeatures(CPUFeatures* features) {
     features->fAMD3DNOWPREFETCH = !!(ecx & bit_PREFETCHW_compat);
   }
 }
+
+#else
+/*
+ * Dummy for non AMD64
+ */
+void determineCPUFeatures(CPUFeatures* features) {
+}
+#endif
 

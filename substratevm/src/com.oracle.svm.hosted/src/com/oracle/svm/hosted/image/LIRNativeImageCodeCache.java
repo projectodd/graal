@@ -34,39 +34,34 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.graalvm.compiler.asm.amd64.AMD64BaseAssembler.OperandDataAnnotation;
+import com.oracle.svm.core.graal.code.InstructionPatcher;
 import org.graalvm.compiler.code.CompilationResult;
 import org.graalvm.compiler.code.CompilationResult.CodeAnnotation;
 import org.graalvm.compiler.core.common.NumUtil;
 import org.graalvm.compiler.debug.DebugContext;
 import org.graalvm.compiler.debug.Indent;
-import org.graalvm.compiler.lir.asm.CompilationResultBuilder;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.word.WordFactory;
 
 import com.oracle.graal.pointsto.meta.AnalysisMethod;
 import com.oracle.objectfile.ObjectFile;
-import com.oracle.svm.core.SubstrateOptions;
 import com.oracle.svm.core.code.CodeInfoEncoder;
 import com.oracle.svm.core.code.CodeInfoQueryResult;
 import com.oracle.svm.core.code.CodeInfoTable;
 import com.oracle.svm.core.code.FrameInfoDecoder;
 import com.oracle.svm.core.code.ImageCodeInfo;
-import com.oracle.svm.core.graal.code.CGlobalDataReference;
-import com.oracle.svm.core.graal.code.InstructionPatcher;
+//import com.oracle.svm.core.graal.code.OldInstructionPatcher;
 import com.oracle.svm.core.util.Counter;
 import com.oracle.svm.core.util.VMError;
 import com.oracle.svm.hosted.NativeImageOptions;
-import com.oracle.svm.hosted.PatchingAnnotation;
+import org.graalvm.compiler.code.PatchingAnnotation;
 import com.oracle.svm.hosted.code.CompilationInfoSupport;
 import com.oracle.svm.hosted.image.NativeBootImage.NativeTextSectionImpl;
 import com.oracle.svm.hosted.meta.HostedMethod;
 import com.oracle.svm.hosted.meta.MethodPointer;
 
 import jdk.vm.ci.code.site.Call;
-import jdk.vm.ci.code.site.ConstantReference;
 import jdk.vm.ci.code.site.DataPatch;
-import jdk.vm.ci.code.site.DataSectionReference;
 import jdk.vm.ci.code.site.Infopoint;
 import jdk.vm.ci.code.site.Reference;
 
@@ -280,17 +275,34 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     // Patch a PC-relative call.
                     // This code handles the case of section-local calls only.
                     int pcDisplacement = callTargetStart - (compStart + call.pcOffset);
-                    patcher.findPatchData(call.pcOffset, pcDisplacement).apply(compilation.getTargetCode());
+
+                    patcher.getPatching(call.pcOffset).patch( call.pcOffset, pcDisplacement, compilation.getTargetCode());
                 }
             }
             // ... and patch references to constant data
+            PatchingAnnotation.Relocation wrappedRelocs = new PatchingAnnotation.Relocation() {
+                @Override
+                public void addDirectRelocationWithAddend(int key, int relocationSize, Long explicitAddend, Object targetObject) {
+                    relocs.addDirectRelocationWithAddend(key, relocationSize, explicitAddend, targetObject);
+                }
+
+                @Override
+                public void addDirectRelocationWithoutAddend(int key, int relocationSize, Object targetObject) {
+                    relocs.addDirectRelocationWithoutAddend(key, relocationSize, targetObject);
+                }
+
+                @Override
+                public void addPCRelativeRelocationWithAddend(int key, int relocationSize, Long explicitAddend, Object targetObject) {
+                    relocs.addPCRelativeRelocationWithAddend(key, relocationSize, explicitAddend, targetObject);
+                }
+            };
             for (DataPatch dataPatch : compilation.getDataPatches()) {
                 Reference ref = dataPatch.reference;
                 /*
                  * Constants are allocated offsets in a separate space, which can be emitted as
                  * read-only (.rodata) section.
                  */
-                InstructionPatcher.PatchData patchData = patcher.findPatchData(dataPatch.pcOffset, 0);
+                //OldInstructionPatcher.PatchData patchData = patcher.findPatchData(dataPatch.pcOffset, 0);
                 /*
                  * The relocation site is some offset into the instruction, which is some offset
                  * into the method, which is some offset into the text section (a.k.a. code cache).
@@ -298,22 +310,8 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                  * we pass it the whole method. We add the method start to get the section-relative
                  * offset.
                  */
-                long siteOffset = compStart + patchData.operandPosition;
-                if (ref instanceof DataSectionReference || ref instanceof CGlobalDataReference) {
-                    /*
-                     * Do we have an addend? Yes; it's constStart. BUT x86/x86-64 PC-relative
-                     * references are relative to the *next* instruction. So, if the next
-                     * instruction starts n bytes from the relocation site, we want to subtract n
-                     * bytes from our addend.
-                     */
-                    long addend = (patchData.nextInstructionPosition - patchData.operandPosition);
-                    relocs.addPCRelativeRelocationWithAddend((int) siteOffset, patchData.operandSize, addend, ref);
-                } else if (ref instanceof ConstantReference) {
-                    assert SubstrateOptions.SpawnIsolates.getValue() : "Inlined object references must be base-relative";
-                    relocs.addDirectRelocationWithoutAddend((int) siteOffset, patchData.operandSize, ref);
-                } else {
-                    throw VMError.shouldNotReachHere("Unknown type of reference in code");
-                }
+                //patcher.patch(dataPatch.pcOffset, ref, relocs, compStart);
+                patcher.getPatching(dataPatch.pcOffset).relocate(ref, wrappedRelocs, compStart);
             }
         }
     }
