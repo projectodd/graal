@@ -24,6 +24,8 @@
  */
 package com.oracle.svm.core.graal.code.aarch64;
 
+import java.util.function.Consumer;
+
 import static com.oracle.svm.core.util.VMError.shouldNotReachHere;
 import static com.oracle.svm.core.util.VMError.unimplemented;
 import static jdk.vm.ci.aarch64.AArch64.lr;
@@ -33,6 +35,7 @@ import static org.graalvm.compiler.core.common.GraalOptions.ZapStackOnMethodEntr
 import static org.graalvm.compiler.lir.LIRValueUtil.asConstantValue;
 
 import com.oracle.svm.core.config.ConfigurationValues;
+import com.oracle.svm.core.graal.CodePatchingAnnotationConsumerFactory;
 import org.graalvm.compiler.asm.Assembler;
 import org.graalvm.compiler.asm.aarch64.AArch64Address;
 import org.graalvm.compiler.asm.aarch64.AArch64Assembler;
@@ -629,6 +632,8 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
     @Override
     public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenResult, FrameMap frameMap, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
         Assembler masm = new AArch64MacroAssembler(getTarget());
+        Consumer<Assembler.CodeAnnotation> consumer = CodePatchingAnnotationConsumerFactory.factory().newConsumer(compilationResult);
+        masm.setCodePatchingAnnotationConsumer(consumer);
         SharedMethod method = ((SubstrateLIRGenerationResult) lirGenResult).getMethod();
         Deoptimizer.StubType stubType = method.getDeoptStubType();
         DataBuilder dataBuilder = new SubstrateDataBuilder();

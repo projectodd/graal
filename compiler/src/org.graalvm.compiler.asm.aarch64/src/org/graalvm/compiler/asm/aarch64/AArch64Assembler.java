@@ -2840,7 +2840,6 @@ public abstract class AArch64Assembler extends Assembler {
         if (codePatchingAnnotationConsumer != null) {
             codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(pos, operandSizeBits));
         }
-
     }
 
     public static class OperandDataAnnotation extends PatchAnnoation {

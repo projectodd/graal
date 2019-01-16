@@ -607,6 +607,7 @@ suite = {
                 "com.oracle.svm.truffle",  # necessary until Truffle is fully supported on Windows (GR-7941)
                 "com.oracle.svm.hosted",
                 "com.oracle.svm.hosted.amd64",
+                "com.oracle.svm.hosted.aarch64",
                 "com.oracle.svm.truffle.nfi",
                 "com.oracle.svm.core",
                 "com.oracle.svm.core.graal.amd64",
