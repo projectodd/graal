@@ -210,7 +210,7 @@ public abstract class AMD64BaseAssembler extends Assembler {
         }
     }
 
-    public abstract static class OperandDataAnnotation extends PatchAnnoation {
+    public static class OperandDataAnnotation extends PatchAnnoation {
         /**
          * The position (bytes from the beginning of the method) of the operand.
          */

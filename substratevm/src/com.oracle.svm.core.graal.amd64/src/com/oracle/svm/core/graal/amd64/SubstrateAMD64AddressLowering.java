@@ -24,6 +24,9 @@
  */
 package com.oracle.svm.core.graal.amd64;
 
+import com.oracle.svm.core.SubstrateOptions;
+import com.oracle.svm.core.graal.meta.SubstrateRegisterConfig;
+import jdk.vm.ci.code.Register;
 import org.graalvm.compiler.asm.amd64.AMD64Address.Scale;
 import org.graalvm.compiler.core.amd64.AMD64AddressNode;
 import org.graalvm.compiler.core.amd64.AMD64CompressAddressLowering;
