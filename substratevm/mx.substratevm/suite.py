@@ -209,6 +209,15 @@ suite = {
             "javaCompliance": "8+",
             "workingSets": "SVM",
         },
+        "com.oracle.svm.hosted.aarch64": {
+            "subDir": "src",
+            "sourceDirs": ["src"],
+            "dependencies": [
+                "com.oracle.svm.hosted",
+            ],
+            "javaCompliance": "8+",
+            "workingSets": "SVM",
+        },
         "com.oracle.svm.hosted": {
             "subDir": "src",
             "sourceDirs": ["src"],
